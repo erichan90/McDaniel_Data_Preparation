@@ -1,0 +1,132 @@
+---
+title: "Assignment4"
+author: "Xu Han"
+date: '2023-10-08'
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+packages = c("tidyverse","knitr","bslib","finalfit","misty","ggplot2")
+#check for missing packages; load and install as needed.
+package.check <- lapply(packages, FUN = function(x){
+    if (!require(x, character.only = TRUE)) {
+        install.packages(x, dependencies = TRUE)
+        library(x, character.only = TRUE)
+    }
+})
+```
+
+## 1 Import and save the dataset
+```{r}
+storm=read.csv("C:/Users/xuhans/data_analytic_program/Data_preparation/week 6/storm_events.csv")
+```
+
+
+
+## 2 limit the dataframe to 
+•	the beginning and ending dates and times 
+•	BEGIN_YEARMONTH
+•	the episode ID
+•	the event ID
+•	the state name and FIPS
+•	the “CZ” name
+•	type
+•	CZ_FIPS
+•	the event type 
+•	the source
+•	the beginning latitude and longitude and ending latitude and longitude 
+
+```{r}
+strom2=storm%>%
+      select(BEGIN_YEARMONTH,BEGIN_DAY,BEGIN_TIME,END_YEARMONTH,END_DAY,END_TIME,EPISODE_ID,EVENT_ID,STATE,STATE_FIPS,CZ_NAME,CZ_TYPE,CZ_FIPS,EVENT_TYPE,SOURCE,BEGIN_LAT,BEGIN_LON,END_LAT,END_LON)
+             
+```
+
+## 3 Arrange the data by beginning year and month
+```{r}
+storm3=strom2%>%
+  arrange(BEGIN_YEARMONTH)
+
+storm3%>%
+  head(10)
+```
+
+## 4 Change state and county name to title case
+```{r}
+storm3$STATE=str_to_title(storm3$STATE)
+storm3$CZ_NAME=str_to_title(storm3$CZ_NAME)
+
+storm3[,c("STATE","CZ_NAME")]%>%
+  head(5)
+```
+
+
+
+## 5 Limit to the events listed by county FIPS (CZ_TYPE of “C”) and then remove the CZ_TYPE column 
+
+```{r}
+table(storm3$CZ_TYPE)
+```
+
+
+
+```{r}
+storm4=storm3%>%
+      filter(CZ_TYPE=="C")%>%
+      select(-CZ_TYPE)
+
+```
+## 6 Pad the state and county FIPS with a “0” at the beginning (hint: there’s a function in stringr to do this) and then unite the two columns to make one fips column with the 5 or 6-digit county FIPS code (5 points) 
+
+```{r}
+storm4$STATE_FIPS=str_pad(storm4$STATE_FIPS,width=3,side="left",pad="0")
+storm4$CZ_FIPS=str_pad(storm4$CZ_FIPS,width=4,side="left",pad="0")
+storm4 <- unite(storm4,COUNTY_FIPs, STATE_FIPS,CZ_FIPS, sep = "")
+
+storm4%>%
+  head(5)
+```
+
+## 7 Change all the column names to lower case
+```{r}
+storm5=storm4%>%
+       rename_all(tolower)
+storm5%>%
+  head(5)
+```
+
+## 8 Use base dataframe of State to create a dataframe
+```{r}
+us_state_info<-data.frame(state=state.name, area=state.area,region=state.region)
+us_state_info%>%
+  filter(state=="Maryland")
+
+```
+
+
+## 9 Create a dataframe with the number of events per state in the year of your birth. Merge in the state information dataframe you just created in step 8. Remove any states that are not in the state information dataframe
+
+```{r}
+event_count=storm5%>%
+  group_by(state)%>%
+  count()
+
+merge_dataset=merge(x=us_state_info,y=event_count,by.x="state",by.y="state")
+```
+
+
+## 10 Create the following plot (10 points)
+### The one state in the far north eastern region of the plot is Texas
+```{r}
+merge_dataset%>%
+  ggplot(aes(x=area,y=n))+
+  geom_point(aes(color=region))+
+  labs(x="Land Area (square miles)",
+       y="# of storm events in 1992")
+```
+
