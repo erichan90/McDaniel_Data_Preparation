@@ -165,7 +165,7 @@ storm4=storm3%>%
       select(-CZ_TYPE)
 ```
 
-## 6 Pad the state and county FIPS with a “0” at the beginning (hint: there’s a function in stringr to do this) and then unite the two columns to make one fips column with the 5 or 6-digit county FIPS code (5 points)
+## 6 Pad the state and county FIPS with a “0” at the beginning (hint: there’s a function in stringr to do this) and then unite the two columns to make one fips column with the 5 or 6-digit county FIPS code
 
 ``` r
 storm4$STATE_FIPS=str_pad(storm4$STATE_FIPS,width=3,side="left",pad="0")
@@ -244,7 +244,7 @@ event_count=storm5%>%
 merge_dataset=merge(x=us_state_info,y=event_count,by.x="state",by.y="state")
 ```
 
-## 10 Create the following plot (10 points)
+## 10 Create the following plot
 
 ### The one state in the far north eastern region of the plot is Texas
 
